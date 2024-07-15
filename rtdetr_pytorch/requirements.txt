@@ -5,3 +5,6 @@ onnxruntime==1.15.1
 pycocotools
 PyYAML
 scipy
+ultralytics==8.2.48
+jupyterlab==4.2.3
+wandb==0.17.4

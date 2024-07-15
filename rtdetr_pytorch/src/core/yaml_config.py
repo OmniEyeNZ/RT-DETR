@@ -32,6 +32,7 @@ class YAMLConfig(BaseConfig):
         
         self.use_ema = cfg.get('use_ema', False)
         self.use_amp = cfg.get('use_amp', False)
+        self.use_wb = cfg.get('use_wb', False)
         self.autocast = cfg.get('autocast', dict())
         self.find_unused_parameters = cfg.get('find_unused_parameters', None)
         self.clip_max_norm = cfg.get('clip_max_norm', 0.)

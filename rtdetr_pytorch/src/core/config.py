@@ -58,6 +58,7 @@ class BaseConfig(object):
 
         self.use_amp :bool = False 
         self.use_ema :bool = False 
+        self.use_wb :bool = False 
         self.sync_bn :bool = False 
         self.clip_max_norm : float = None
         self.find_unused_parameters :bool = None

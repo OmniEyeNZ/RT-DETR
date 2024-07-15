@@ -62,6 +62,9 @@ class DetSolver(BaseSolver):
                     best_stat['epoch'] = epoch
                     best_stat[k] = test_stats[k][0]
             print('best_stat: ', best_stat)
+            if self.cfg.use_wb:
+                import wandb
+                wandb.log(best_stat)
 
 
             log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},

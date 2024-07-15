@@ -23,8 +23,27 @@ def main(args, ) -> None:
         args.config,
         resume=args.resume, 
         use_amp=args.amp,
-        tuning=args.tuning
+        tuning=args.tuning, 
+        use_wb=args.wb
     )
+
+    # init weight and bias
+    is_wb = False
+    if args.wb: 
+        import wandb
+        wandb.init(
+            # set the wandb project where this run will be logged
+            project="rt-detr-training",
+
+            # track hyperparameters and run metadata
+            config={
+                "learning_rate": str(cfg.lr_scheduler),
+                "architecture": str(cfg.model),
+                "dataset": str(cfg.train_dataset),
+                "epochs": cfg.epoches,
+            }
+        )
+        is_wb = True
 
     solver = TASKS[cfg.yaml_cfg['task']](cfg)
     
@@ -32,7 +51,9 @@ def main(args, ) -> None:
         solver.val()
     else:
         solver.fit()
-
+    
+    if is_wb:
+        wandb.finish()
 
 if __name__ == '__main__':
 
@@ -42,6 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('--tuning', '-t', type=str, )
     parser.add_argument('--test-only', action='store_true', default=False,)
     parser.add_argument('--amp', action='store_true', default=False,)
+    parser.add_argument('--wb', action='store_true', default=False)
 
     args = parser.parse_args()
 
