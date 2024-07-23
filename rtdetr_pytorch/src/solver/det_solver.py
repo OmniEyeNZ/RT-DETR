@@ -75,6 +75,7 @@ class DetSolver(BaseSolver):
             if self.output_dir and dist.is_main_process():
                 with (self.output_dir / "log.txt").open("a") as f:
                     f.write(json.dumps(log_stats) + "\n")
+                    wandb.log(log_stats) if self.cfg.use_wb else None
 
                 # for evaluation logs
                 if coco_evaluator is not None:
