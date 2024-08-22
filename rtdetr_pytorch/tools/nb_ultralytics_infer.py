@@ -4,7 +4,7 @@ from ultralytics import RTDETR
 
 #%%
 # Consts
-OUTPUT_TMP_FOLDER = "/tmp/rt-detr/out/"
+OUTPUT_TMP_FOLDER = "/mnt/ssd/tmp/rt-detr/out/"
 
 #%%
 model = RTDETR("models/rtdetr-l.pt")
