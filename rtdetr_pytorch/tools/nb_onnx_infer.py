@@ -192,3 +192,4 @@ drawBoxInImage(img_path)
 # draw bounding boxes on the sample video
 drawBoxInVideo(video_path)
 # %%
+inferVideo2Json(video_path)
