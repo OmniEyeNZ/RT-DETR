@@ -141,7 +141,50 @@ def drawBoxInVideo(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLD
         #     break
     cap.release()
     video.release()
+#%%
+## Function to output json output
+def inferVideo2Json(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLDER+"output.json"):
+    session = ort.InferenceSession(model_path)
+    box_set = BoxSet()  # Record all box, label and score information
+    cap = cv2.VideoCapture(video_path)
+    json_video = {}  # json file saved video information
+    json_frame = {}  # json file saved picture information that come from video frame
+    print(f"video_path:{video_path}")
+    print(f"json_path:{ouput_path}")
+    with open(ouput_path, 'w') as f:
+        i = 0
+        detection_id = 0
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            # inference
+            box_set_out = inference(session, frame, box_set)  # get all boxes
+            #print("-----------------")
+            #print(box_set_out.boxes)
 
+            json_frame = {f"{i}": []}
+            for box_info in box_set_out.boxes:
+                # print(box_info['box']) # list
+                # print(box_info['score']) # int
+                json_box = {
+                    "bbox": box_info['box'].tolist(),
+                    "confidence": float(box_info['score']),
+                    "image_feature": None,
+                    "detection_id": detection_id
+                }
+                json_frame[f"{i}"].append(json_box)
+
+            #Stitch the JSON of each image into the JSON of the video
+            if json_frame[f"{i}"] != []:
+                #print(json_frame)
+                json_video = json_video | json_frame
+                i = i + 1
+                detection_id = detection_id + 1
+
+        #print("===========\n",json_video)
+        json.dump(json_video, f, indent=2)
+        cap.release()
 # %%
 # draw bounding boxes on the sample image
 drawBoxInImage(img_path)
