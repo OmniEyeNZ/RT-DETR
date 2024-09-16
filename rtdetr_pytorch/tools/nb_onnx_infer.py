@@ -1,11 +1,11 @@
 #%%
 import cv2
 import numpy as np
+import json
+import pprint
 
 import torch
 import onnxruntime as ort
-from PIL import Image, ImageDraw
-from torchvision.transforms import ToTensor
 #%%
 # Define consts
 MODEL_PATH = 'models/rt-detr-20240820.onnx'
@@ -27,7 +27,7 @@ def model_infer(session, image):
     image = np.expand_dims(image, axis=0)
 
     size = torch.tensor([[640, 640]])
-    outputs = session.run(None, {'images': image, "orig_target_sizes": size.data.numpy()})
+    outputs = session.run(None, {'Input': image})
     return outputs
 
 #%%
@@ -80,7 +80,7 @@ def inference(session, frame, box_set: BoxSet, score_threshold=SCORE_THRESHOLD) 
     return box_set
 #%%
 ## Function to draw boxes on an image
-def drawBoxInImage(img_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLDER+"output.jpg"):
+def draw_box_in_image(img_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLDER+"output.jpg"):
     session = ort.InferenceSession(MODEL_PATH)
     frame = cv2.imread(img_path)
     box_set = BoxSet()
@@ -103,7 +103,7 @@ def drawBoxInImage(img_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLDER
     cv2.imwrite(ouput_path, frame)
 #%%
 ## Function to draw boxes on video
-def drawBoxInVideo(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLDER+"output.mp4"):
+def draw_box_in_video(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLDER+"output.mp4"):
     session = ort.InferenceSession(model_path)
     box_set = BoxSet()
     cap = cv2.VideoCapture(video_path)
@@ -136,14 +136,11 @@ def drawBoxInVideo(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLD
                 3
             )
         video.write(frame)
-        # cv2.imshow('Tracking', frame)
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
     cap.release()
     video.release()
 #%%
 ## Function to output json output
-def inferVideo2Json(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLDER+"output.json"):
+def infer_video_2_json(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOLDER+"output.json"):
     session = ort.InferenceSession(model_path)
     box_set = BoxSet()  # Record all box, label and score information
     cap = cv2.VideoCapture(video_path)
@@ -165,8 +162,8 @@ def inferVideo2Json(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOL
 
             json_frame = {f"{i}": []}
             for box_info in box_set_out.boxes:
-                # print(box_info['box']) # list
-                # print(box_info['score']) # int
+                box_info['box'][2] = box_info['box'][2] - box_info['box'][0]
+                box_info['box'][3] = box_info['box'][3] - box_info['box'][1]
                 json_box = {
                     "bbox": box_info['box'].tolist(),
                     "confidence": float(box_info['score']),
@@ -177,19 +174,61 @@ def inferVideo2Json(video_path, model_path=MODEL_PATH, ouput_path=OUTPUT_TMP_FOL
 
             #Stitch the JSON of each image into the JSON of the video
             if json_frame[f"{i}"] != []:
-                #print(json_frame)
-                json_video = json_video | json_frame
+                json_video.update(json_frame)
                 i = i + 1
                 detection_id = detection_id + 1
 
         #print("===========\n",json_video)
         json.dump(json_video, f, indent=2)
         cap.release()
+
+#%%
+# inference image to json
+def infer_img_2_json(img_path, model_path=MODEL_PATH, img_id=-1)->dict:
+    session = ort.InferenceSession(model_path)
+    img = cv2.imread(img_path)
+    box_set = BoxSet() # Record all box, label and score information
+    print(f"img_path:{img_path}")
+    
+    # infernece
+    box_set_out = inference(session, img, box_set)  # get all boxes
+    
+    #output json
+    json_img = {f"{img_id}": []}
+    for box_info in box_set_out.boxes:
+        # print(box_info['box']) # list
+        # print(box_info['score']) # int
+        box_info['box'][2] = box_info['box'][2] - box_info['box'][0]
+        box_info['box'][3] = box_info['box'][3] - box_info['box'][1]
+        json_box = {
+            "bbox": box_info['box'].tolist(),
+            "confidence": float(box_info['score']),
+            "image_feature": None,
+            "detection_id": 0
+        }
+        json_img[f"{img_id}"].append(json_box)
+    return json_img
+
+#%%
+# inference images from folder to json
+def infer_img_folder_2_json(img_folder,img_json_path,model_path=MODEL_PATH,ouput_path=OUTPUT_TMP_FOLDER+"output.json"):
+    with open(img_json_path,'r') as f:
+        val_label_json = json.load(f)
+    json_imgs = {}
+    for image in val_label_json['images']:
+        _img_id = image['id']
+        _img_path = img_folder + image['file_name']
+        json_img = infer_img_2_json(_img_path,model_path,_img_id)
+        #print(json_img)
+        json_imgs.update(json_img)
+    with open(ouput_path, 'w') as f:
+        json.dump(json_imgs, f, indent=2)
+
 # %%
 # draw bounding boxes on the sample image
-drawBoxInImage(img_path)
+draw_box_in_image(img_path)
 # %%
 # draw bounding boxes on the sample video
-drawBoxInVideo(video_path)
+draw_box_in_video(video_path)
 # %%
-inferVideo2Json(video_path)
+infer_video_2_json(video_path)
