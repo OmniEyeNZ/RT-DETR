@@ -10,7 +10,7 @@ import random
 import json
 #%%
 IMG_PATH = "/home/irisdc01/training/dataset/test_subset/nz.fol_id.hu-7385-0262.a/nz.fol_id.hu-7385-0262.a.a.peaks-paradise-2024_08-19_06_00_01_frame_10461.png"
-TRT_MODEL_PATH = "/mnt/ssd/tmp/rt-detr/out/2024-09-13.r18vd.trt.engine"
+TRT_MODEL_PATH = "models/2024-09-13.r18vd.trt.engine"
 OUT_PATH = "/mnt/ssd/tmp/rt-detr/out/"
 SCORE_THRESHOLD = 0.5
 #%%
@@ -121,8 +121,8 @@ def group_list(lst, group_size=4):
 #%%
 # Filter for boxes that match the scores
 def postprocess(outputs, score_threshold):
-    labels = outputs[1]
-    boxes = outputs[2]
+    labels = outputs[2]
+    boxes = outputs[1]
     group_boxes = group_list(boxes)
     scores = outputs[0]
     filter_list = scores > score_threshold
@@ -132,7 +132,7 @@ def postprocess(outputs, score_threshold):
         if filter_result == True:
             filtered_boxes.append(group_boxes[filter_index])
             filter_index = filter_index + 1
-    filtered_labels = labels[filter_list]
+    filtered_labels = labels
     filtered_scores = scores[filter_list]
     return filtered_boxes, filtered_labels, filtered_scores
 
@@ -144,22 +144,22 @@ class BoxSet:
 
     def update(self, boxes, labels, scores, actual_high=1080, actual_width=1920):
         new_boxes = []
-        for box, label, score in zip(boxes, labels, scores):
-            box[0] = int(box[0] * (actual_width / 640))
-            box[1] = int(box[1] * (actual_high / 640))
-            box[2] = int(box[2] * (actual_width / 640))
-            box[3] = int(box[3] * (actual_high / 640))
+        for box, score in zip(boxes, scores):
+            box[0] = int(box[0] * actual_width)
+            box[1] = int(box[1] * actual_high)
+            box[2] = int(box[2] * actual_width)
+            box[3] = int(box[3] * actual_high)
             #print(type(box), ":", box)
-            box_infor = {'box': box, 'label': label, 'score': score}
-            new_boxes.append(box_infor)
+            box_info = {'box': box, 'label': 'dairy-cow', 'score': score}
+            new_boxes.append(box_info)
         self.boxes = new_boxes
 
     def clear(self):
-        self.boxes.clear()
+        self.boxes = []
 
 #%%
 # Inference about the image and draw box
-def draw_box_in_image(img_path = IMG_PATH, engine_path = TRT_MODEL_PATH, out_path = OUT_PATH + "out.png", score_threshold = SCORE_THRESHOLD):
+def draw_box_in_image(img_path = IMG_PATH, engine_path = TRT_MODEL_PATH, out_path = OUT_PATH + "output.jpg", score_threshold = SCORE_THRESHOLD):
     # load image
     image = cv2.imread(img_path)
     # load image shape
@@ -303,7 +303,7 @@ def infer_img_folder_2_json(img_folder,img_json_path,engine_path=TRT_MODEL_PATH,
         json.dump(json_imgs, f, indent=2)
 #%%
 # inference on image
-# draw_box_in_image()
+draw_box_in_image()
 #%%
 # inference on image
 draw_box_in_video(video_path1, output1)
@@ -311,4 +311,17 @@ draw_box_in_video(video_path1, output1)
 #%%
 # inference images from folder to json
 #infer_img_folder_2_json(img_folder, img_json_path)
+# %%
+
+#%%[markdown]
+## show images
+# %%
+# import libs
+from PIL import Image
+
+import matplotlib.pyplot as plt
+import numpy as np
+# %%
+img = np.asarray(Image.open(OUT_PATH+"output.jpg"))
+plt.imshow(img)
 # %%

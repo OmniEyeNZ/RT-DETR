@@ -1,6 +1,11 @@
 """by lyuwenyu
 """
-
+"""
+Modified:
+    line 39. class: Model
+    line 60. Variable: dynamic_axes
+    line 76. Function call: torch.onnx.export(...)
+"""
 import os 
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
@@ -37,32 +42,62 @@ def main(args, ):
             self.model = cfg.model.deploy()
             self.postprocessor = cfg.postprocessor.deploy()
             print(self.postprocessor.deploy_mode)
-            
-        def forward(self, images, orig_target_sizes):
+        
+        # Pass the second part of the model input (picture size) as a fixed value
+        def forward(self, images):
+            img_size = 640
+            orig_target_sizes = torch.tensor([[img_size, img_size]])
             outputs = self.model(images)
-            return self.postprocessor(outputs, orig_target_sizes)
+            labels, boxes, scores = self.postprocessor(outputs, orig_target_sizes)
+            relative_boxes = torch.div(boxes, img_size)
+            counts = labels.shape[1]
+            return counts, relative_boxes, scores
+        # # The original code
+        # def forward(self, images, orig_target_sizes):
+        #     outputs = self.model(images)
+        #     return self.postprocessor(outputs, orig_target_sizes)
     
 
     model = Model()
 
+    # Change the input to only one 'images'
     dynamic_axes = {
-        'images': {0: 'N', },
-        'orig_target_sizes': {0: 'N'}
+        'Input': {0: 'N', },
+        #'orig_target_sizes': {0: 'N'}
     }
+    # # The original code
+    # dynamic_axes = {
+    #     'images': {0: 'N', },
+    #     'orig_target_sizes': {0: 'N'}
+    # }
+
 
     data = torch.rand(1, 3, 640, 640)
     size = torch.tensor([[640, 640]])
 
+    # change "(data,size) to (data)"
+    # change "input_names=['images', 'orig_target_sizes']" to "input_names=['images']"
     torch.onnx.export(
         model, 
-        (data, size), 
+        (data), 
         args.file_name,
-        input_names=['images', 'orig_target_sizes'],
-        output_names=['labels', 'boxes', 'scores'],
+        input_names=['Input'],
+        output_names=['BatchedNMS', 'BatchedNMS_1', 'BatchedNMS_2'],
         dynamic_axes=dynamic_axes,
         opset_version=16, 
         verbose=False
     )
+    # # The original code
+    # torch.onnx.export(
+    #     model, 
+    #     (data, size), 
+    #     args.file_name,
+    #     input_names=['images', 'orig_target_sizes'],
+    #     output_names=['labels', 'boxes', 'scores'],
+    #     dynamic_axes=dynamic_axes,
+    #     opset_version=16, 
+    #     verbose=False
+    # )
 
 
     if args.check:

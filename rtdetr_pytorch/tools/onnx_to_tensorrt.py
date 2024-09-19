@@ -4,7 +4,7 @@ import tensorrt as trt
 import numpy as np
 #%%
 ONNX_SIM_MODEL_PATH = 'models/2024-09-13.r18vd.onnx'
-TENSORRT_ENGINE_PATH_PY = '/mnt/ssd/tmp/rt-detr/out/2024-09-13.r18vd.trt.engine'
+TENSORRT_ENGINE_PATH_PY = 'models/2024-09-13.r18vd.trt.engine'
 
 #%%
 # View shape of network

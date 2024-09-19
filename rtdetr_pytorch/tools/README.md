@@ -15,6 +15,8 @@ Tuning script examples
 
 Export script examples
 - `python tools/export_onnx.py -c path/to/config -r path/to/checkpoint --check`
+- `python tools/export_onnx.py -c configs/rtdetr/rtdetr_r50vd_6x_custom.yml -r tools/models/2024-09-13.r50vd.checkpoint0068.pth --check`
+- `python tools/export_onnx.py -c configs/rtdetr/rtdetr_r18vd_6x_coco.yml -r tools/models/2024-09-13.r18vd.checkpoint0068.pth --check`
 
 
 GPU do not release memory

@@ -8,9 +8,9 @@ import torch
 import onnxruntime as ort
 #%%
 # Define consts
-MODEL_PATH = 'models/rt-detr-20240820.onnx'
+MODEL_PATH = 'models/2024-09-13.r18vd.onnx'
 OUTPUT_TMP_FOLDER = '/mnt/ssd/tmp/rt-detr/out/'
-SCORE_THRESHOLD = 0.5
+SCORE_THRESHOLD = 0.1
 #%%
 # Define file paths to be processed
 video_path = "/mnt/ssd/vis_tool/data/raw-videos/nz.fol_id.as-7776-0152.a.a.spring_river-2024_07-31_08_00_01.mp4"
@@ -39,7 +39,7 @@ def postprocess(outputs, score_threshold):
     # print(outputs)
     threshold = score_threshold
     filtered_boxes = boxes[scores > threshold]
-    filtered_labels = labels[scores > threshold]
+    filtered_labels = labels
     filtered_scores = scores[scores > threshold]
     return filtered_boxes, filtered_labels, filtered_scores
 
@@ -51,14 +51,13 @@ class BoxSet:
 
     def update(self, boxes, labels, scores, actual_high=1080, actual_width=1920):
         new_boxes = []
-        for box, label, score in zip(boxes, labels, scores):
-            box = box.astype(int)
-            box[0] = int(box[0] * (actual_width / 640))
-            box[1] = int(box[1] * (actual_high / 640))
-            box[2] = int(box[2] * (actual_width / 640))
-            box[3] = int(box[3] * (actual_high / 640))
+        for box, score in zip(boxes, scores):
+            box[0] = int(box[0] * actual_width)
+            box[1] = int(box[1] * actual_high)
+            box[2] = int(box[2] * actual_width)
+            box[3] = int(box[3] * actual_high)
             #print(type(box), ":", box)
-            box_info = {'box': box, 'label': label, 'score': score}
+            box_info = {'box': box, 'label': 'dairy-cow', 'score': score}
             new_boxes.append(box_info)
         self.boxes = new_boxes
 
@@ -76,7 +75,7 @@ def inference(session, frame, box_set: BoxSet, score_threshold=SCORE_THRESHOLD) 
     boxes, labels, scores = postprocess(outputs, score_threshold)
     # update box_set
     box_set.update(boxes, labels, scores, actual_high, actual_width)
-
+    print(box_set.boxes)
     return box_set
 #%%
 ## Function to draw boxes on an image
@@ -232,3 +231,16 @@ draw_box_in_image(img_path)
 draw_box_in_video(video_path)
 # %%
 infer_video_2_json(video_path)
+
+#%%[markdown]
+## show images
+# %%
+# import libs
+from PIL import Image
+
+import matplotlib.pyplot as plt
+import numpy as np
+# %%
+img = np.asarray(Image.open(OUTPUT_TMP_FOLDER+"output.jpg"))
+plt.imshow(img)
+# %%
