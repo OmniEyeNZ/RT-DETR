@@ -47,7 +47,8 @@ def main(args, ):
         def forward(self, images):
             img_size = 640
             orig_target_sizes = torch.tensor([[img_size, img_size]])
-            outputs = self.model(images)
+            inputs = torch.div(images, 255)
+            outputs = self.model(inputs)
             labels, boxes, scores = self.postprocessor(outputs, orig_target_sizes)
             relative_boxes = torch.div(boxes, img_size)
             counts = labels.shape[1]
@@ -72,7 +73,7 @@ def main(args, ):
     # }
 
 
-    data = torch.rand(1, 3, 640, 640)
+    data = torch.randint(0, 255, (1, 3, 640, 640))
     size = torch.tensor([[640, 640]])
 
     # change "(data,size) to (data)"

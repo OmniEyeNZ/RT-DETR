@@ -22,8 +22,7 @@ img_path = "/home/irisdc01/training/dataset/detection-images/nz.fol_id.as-7775-0
 def model_infer(session, image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (640, 640))
-    image = image.transpose(2, 0, 1)
-    image = image.astype(np.float32) / 255.0
+    image = image.transpose(2, 0, 1).astype(np.int64)
     image = np.expand_dims(image, axis=0)
 
     size = torch.tensor([[640, 640]])

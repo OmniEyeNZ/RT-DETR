@@ -9,7 +9,7 @@ import math
 import random
 import json
 #%%
-IMG_PATH = "/home/irisdc01/training/dataset/test_subset/nz.fol_id.hu-7385-0262.a/nz.fol_id.hu-7385-0262.a.a.peaks-paradise-2024_08-19_06_00_01_frame_10461.png"
+IMG_PATH = "/home/irisdc01/training/dataset/detection-images/nz.fol_id.as-7775-0038.a/nz.fol_id.as-7775-0038.a.a.katoa-2022_11-15_05_00_14_frame_10879.png"
 TRT_MODEL_PATH = "models/2024-09-13.r18vd.trt.engine"
 OUT_PATH = "/mnt/ssd/tmp/rt-detr/out/"
 SCORE_THRESHOLD = 0.5
@@ -91,14 +91,14 @@ def img_preprocess(image):
     ratio_w = 640 / image_w
 
     img = cv2.resize(image, (0, 0), fx=ratio_w, fy=ratio_h, interpolation=2)
-    img = img[:, :, ::-1] / 255.0
+    img = img[:, :, ::-1]
     img = img.transpose(2, 0, 1)
     img = np.ascontiguousarray(img[np.newaxis], dtype=np.float32)
     return img
 
 #%%
 # Perform inferences
-def tensorrt_infernce(engine, image):
+def tensorrt_inference(engine, image):
     context = engine.create_execution_context()
     inputs_alloc_buf, outputs_alloc_buf, bindings_alloc_buf, stream_alloc_buf = alloc_buf_N(engine,image)
     # print("-------intputs array---------")
@@ -170,8 +170,7 @@ def draw_box_in_image(img_path = IMG_PATH, engine_path = TRT_MODEL_PATH, out_pat
     # load tensorrt model
     engine = load_engine(engine_path)
     # inference
-    outputs = tensorrt_infernce(engine, preprocess_image)
-
+    outputs = tensorrt_inference(engine, preprocess_image)
     # postprocess for bbox information
     boxes, labels, scores = postprocess(outputs, score_threshold)
     box_set = BoxSet()
@@ -223,7 +222,7 @@ def draw_box_in_video(video_path, output_path, engine_path=TRT_MODEL_PATH, score
         # iamge preprocess
         preprocess_image = img_preprocess(frame)
         # inference
-        outputs = tensorrt_infernce(engine, preprocess_image)
+        outputs = tensorrt_inference(engine, preprocess_image)
 
         # postprocess for bbox information
         boxes, labels, scores = postprocess(outputs, score_threshold)
@@ -263,7 +262,7 @@ def infer_img_2_json(img_path, engine_path=TRT_MODEL_PATH, img_id=-1, score_thre
     # load tensorrt model
     engine = load_engine(engine_path)
     # inference
-    outputs = tensorrt_infernce(engine, preprocess_image)
+    outputs = tensorrt_inference(engine, preprocess_image)
 
     # postprocess for bbox information
     boxes, labels, scores = postprocess(outputs, score_threshold)
