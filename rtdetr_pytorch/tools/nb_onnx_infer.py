@@ -20,7 +20,8 @@ img_path = "/home/irisdc01/training/dataset/detection-images/nz.fol_id.as-7775-0
 #%%
 ## Output the box information through init the picture and run model
 def model_infer(session, image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # RT-DETR can handle both RGB or BGR images
+    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (640, 640))
     image = image.transpose(2, 0, 1).astype(np.int64)
     image = np.expand_dims(image, axis=0)
