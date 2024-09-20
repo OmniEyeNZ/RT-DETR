@@ -93,7 +93,7 @@ def img_preprocess(image):
     img = cv2.resize(image, (0, 0), fx=ratio_w, fy=ratio_h, interpolation=2)
     img = img[:, :, ::-1]
     img = img.transpose(2, 0, 1)
-    img = np.ascontiguousarray(img[np.newaxis], dtype=np.float32)
+    img = np.ascontiguousarray(img[np.newaxis], dtype=np.int32)
     return img
 
 #%%
