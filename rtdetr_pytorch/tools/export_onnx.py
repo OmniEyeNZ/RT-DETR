@@ -51,7 +51,7 @@ def main(args, ):
             outputs = self.model(inputs)
             labels, boxes, scores = self.postprocessor(outputs, orig_target_sizes)
             relative_boxes = torch.div(boxes, img_size)
-            counts = labels.shape[1]
+            counts = torch.tensor([labels.shape[1]])
             return counts, relative_boxes, scores
         # # The original code
         # def forward(self, images, orig_target_sizes):
