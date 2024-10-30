@@ -76,8 +76,8 @@ def main(args, ):
     print("Is dynamic enabled: ", is_dynamic)
     print("dynamic_axes: ", dynamic_axes)
 
-
-    data = torch.randint(0, 255, (96, 3, 640, 640))
+    print("batch size:", args.batch_size)
+    data = torch.randint(0, 255, (args.batch_size, 3, 640, 640))
     size = torch.tensor([[640, 640]])
 
     # change "(data,size) to (data)"
@@ -180,6 +180,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume', '-r', type=str, )
     parser.add_argument('--file-name', '-f', type=str, default='model.onnx')
     parser.add_argument('--check',  action='store_true', default=False,)
+    parser.add_argument('--batch-size', type=int, default=64,)
     parser.add_argument('--simplify',  action='store_true', default=False,)
 
     args = parser.parse_args()
