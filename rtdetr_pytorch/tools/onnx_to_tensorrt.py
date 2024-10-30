@@ -3,8 +3,8 @@ import os
 import tensorrt as trt
 import numpy as np
 #%%
-ONNX_SIM_MODEL_PATH = 'models/2024-09-13.r18vd.onnx'
-TENSORRT_ENGINE_PATH_PY = 'models/2024-09-13.r18vd.trt.engine'
+ONNX_SIM_MODEL_PATH = 'models/2024-09-13.r18vd.96.onnx'
+TENSORRT_ENGINE_PATH_PY = 'models/2024-09-13.r18vd.96.trt.engine'
 
 #%%
 # View shape of network
@@ -50,7 +50,7 @@ def onnx_to_tensorrt(onnx_file_path = ONNX_SIM_MODEL_PATH, engine_file_path = TE
     # Create config element
     config = builder.create_builder_config()
     # Set workspace memory size
-    config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 1 << 30)  # 1GB workspace
+    config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 4 << 30)  # 1GB workspace
 
     # Set precision
     if flop == 16:
@@ -71,10 +71,9 @@ def onnx_to_tensorrt(onnx_file_path = ONNX_SIM_MODEL_PATH, engine_file_path = TE
     # min_shape_0 = (1, *input_shape_0[1:])
     # opt_shape_0 = (4, *input_shape_0[1:])
     # max_shape_0 = (8, *input_shape_0[1:])
-    shape_0 = (1, *input_shape_0[1:])
-    print("------shape_0-------",input_name_0,shape_0)
+    print("------input and shape-------",input_name_0,input_shape_0)
 
-    profile.set_shape(input_name_0, shape_0, shape_0, shape_0)
+    profile.set_shape(input_name_0, input_shape_0, input_shape_0, input_shape_0)
 
     config.add_optimization_profile(profile)
     print("Building TensorRT engine. This may take a few minutes...")

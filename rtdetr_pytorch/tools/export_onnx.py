@@ -51,7 +51,7 @@ def main(args, ):
             outputs = self.model(inputs)
             labels, boxes, scores = self.postprocessor(outputs, orig_target_sizes)
             relative_boxes = torch.div(boxes, img_size)
-            counts = torch.tensor([labels.shape[1]])
+            counts = torch.full(labels.shape, labels.shape[1])
             return counts, relative_boxes, scores
         # # The original code
         # def forward(self, images, orig_target_sizes):
@@ -61,19 +61,23 @@ def main(args, ):
 
     model = Model()
 
-    # Change the input to only one 'images'
+    # Change the input to only on 'images'
+    # Disable dynamic axes as we use fixed batch
+    is_dynamic = False
     dynamic_axes = {
         'Input': {0: 'N', },
         #'orig_target_sizes': {0: 'N'}
-    }
+    } if is_dynamic else None
     # # The original code
     # dynamic_axes = {
     #     'images': {0: 'N', },
     #     'orig_target_sizes': {0: 'N'}
     # }
+    print("Is dynamic enabled: ", is_dynamic)
+    print("dynamic_axes: ", dynamic_axes)
 
 
-    data = torch.randint(0, 255, (1, 3, 640, 640))
+    data = torch.randint(0, 255, (96, 3, 640, 640))
     size = torch.tensor([[640, 640]])
 
     # change "(data,size) to (data)"
