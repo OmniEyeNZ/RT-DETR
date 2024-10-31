@@ -46,12 +46,12 @@ def main(args, ):
         # Pass the second part of the model input (picture size) as a fixed value
         def forward(self, images):
             img_size = 640
-            orig_target_sizes = torch.tensor([[img_size, img_size]])
+            orig_target_sizes = torch.tensor([[img_size, img_size]] * images.size(0))
             inputs = torch.div(images, 255)
             outputs = self.model(inputs)
             labels, boxes, scores = self.postprocessor(outputs, orig_target_sizes)
             relative_boxes = torch.div(boxes, img_size)
-            counts = torch.full(labels.shape, labels.shape[1])
+            counts = torch.tensor([[labels.shape[1]]])
             return counts, relative_boxes, scores
         # # The original code
         # def forward(self, images, orig_target_sizes):
