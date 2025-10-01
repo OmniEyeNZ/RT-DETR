@@ -12,6 +12,10 @@
 
 </details>
 
+## Requirments
+
+python 3.10
+
 
 ## Model Zoo
 
