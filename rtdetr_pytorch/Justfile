@@ -1,0 +1,2 @@
+conver_model CONFIG RESUME FILENAME='model.onnx' :
+  python tools/export_onnx.py --config {{CONFIG}} --resume {{RESUME}} --file-name {{FILENAME}}
