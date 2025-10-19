@@ -1,6 +1,11 @@
 """by lyuwenyu
 """
-
+"""
+Modified:
+    line 39. class: Model
+    line 60. Variable: dynamic_axes
+    line 76. Function call: torch.onnx.export(...)
+"""
 import os 
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
@@ -37,32 +42,69 @@ def main(args, ):
             self.model = cfg.model.deploy()
             self.postprocessor = cfg.postprocessor.deploy()
             print(self.postprocessor.deploy_mode)
-            
-        def forward(self, images, orig_target_sizes):
-            outputs = self.model(images)
-            return self.postprocessor(outputs, orig_target_sizes)
+        
+        # Pass the second part of the model input (picture size) as a fixed value
+        def forward(self, images):
+            img_size = 640
+            orig_target_sizes = torch.tensor([[img_size, img_size]] * images.size(0))
+            inputs = torch.div(images, 255)
+            outputs = self.model(inputs)
+            labels, boxes, scores = self.postprocessor(outputs, orig_target_sizes)
+            relative_boxes = torch.div(boxes, img_size)
+            counts = torch.tensor([[labels.shape[1]]] * args.batch_size)
+            print(f'counts shape: {counts.shape}, relative_boxes shape: {relative_boxes.shape}, scores shape: {scores.shape}')
+            print(f'counts type: {counts.dtype}, relative_boxes shape: {relative_boxes.dtype}, scores shape: {scores.dtype}')
+            return counts, relative_boxes, scores
+        # # The original code
+        # def forward(self, images, orig_target_sizes):
+        #     outputs = self.model(images)
+        #     return self.postprocessor(outputs, orig_target_sizes)
     
 
     model = Model()
 
+    # Change the input to only on 'images'
+    # Disable dynamic axes as we use fixed batch
+    is_dynamic = False
     dynamic_axes = {
-        'images': {0: 'N', },
-        'orig_target_sizes': {0: 'N'}
-    }
+        'Input': {0: 'N', },
+        #'orig_target_sizes': {0: 'N'}
+    } if is_dynamic else None
+    # # The original code
+    # dynamic_axes = {
+    #     'images': {0: 'N', },
+    #     'orig_target_sizes': {0: 'N'}
+    # }
+    print("Is dynamic enabled: ", is_dynamic)
+    print("dynamic_axes: ", dynamic_axes)
 
-    data = torch.rand(1, 3, 640, 640)
+    print("batch size:", args.batch_size)
+    data = torch.randint(0, 255, (args.batch_size, 3, 640, 640))
     size = torch.tensor([[640, 640]])
 
+    # change "(data,size) to (data)"
+    # change "input_names=['images', 'orig_target_sizes']" to "input_names=['images']"
     torch.onnx.export(
         model, 
-        (data, size), 
+        (data), 
         args.file_name,
-        input_names=['images', 'orig_target_sizes'],
-        output_names=['labels', 'boxes', 'scores'],
+        input_names=['Input'],
+        output_names=['BatchedNMS', 'BatchedNMS_1', 'BatchedNMS_2'],
         dynamic_axes=dynamic_axes,
         opset_version=16, 
         verbose=False
     )
+    # # The original code
+    # torch.onnx.export(
+    #     model, 
+    #     (data, size), 
+    #     args.file_name,
+    #     input_names=['images', 'orig_target_sizes'],
+    #     output_names=['labels', 'boxes', 'scores'],
+    #     dynamic_axes=dynamic_axes,
+    #     opset_version=16, 
+    #     verbose=False
+    # )
 
 
     if args.check:
@@ -140,6 +182,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume', '-r', type=str, )
     parser.add_argument('--file-name', '-f', type=str, default='model.onnx')
     parser.add_argument('--check',  action='store_true', default=False,)
+    parser.add_argument('--batch-size', type=int, default=64,)
     parser.add_argument('--simplify',  action='store_true', default=False,)
 
     args = parser.parse_args()

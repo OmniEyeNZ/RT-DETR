@@ -6,3 +6,4 @@ pycocotools
 PyYAML
 scipy
 transformers
+numpy==1.26.4

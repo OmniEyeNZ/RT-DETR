@@ -43,6 +43,8 @@ Notes
 <summary>Install</summary>
 
 ```bash
+python3.10 -m venv env
+source env/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -71,8 +73,10 @@ path/to/coco/
 
 ```shell
 # training on single-gpu
-export CUDA_VISIBLE_DEVICES=0
-python tools/train.py -c configs/rtdetr/rtdetr_r50vd_6x_coco.yml
+python tools/train.py \
+  -c configs/rtdetr/rtdetr_r18vd_6x_custom.yml \
+  -r output/2024-09-13.r18vd.checkpoint0068.pth \
+  --seed=0
 ```
 
 - Training on Multiple GPUs:
