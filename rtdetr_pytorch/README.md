@@ -69,14 +69,21 @@ path/to/coco/
 <details>
 <summary>Training & Evaluation</summary>
 
+
+- Training on a Single GPU with custom dataset and resume checkpoint:
+```shell
+python tools/train.py \
+  -c configs/rtdetr/rtdetr_r18vd_6x_custom.yml \
+  -r output/2024-09-13.r18vd.checkpoint0068.pth
+```
+
+
 - Training on a Single GPU:
 
 ```shell
 # training on single-gpu
-python tools/train.py \
-  -c configs/rtdetr/rtdetr_r18vd_6x_custom.yml \
-  -r output/2024-09-13.r18vd.checkpoint0068.pth \
-  --seed=0
+export CUDA_VISIBLE_DEVICES=0
+python tools/train.py -c configs/rtdetr/rtdetr_r50vd_6x_coco.yml
 ```
 
 - Training on Multiple GPUs:
