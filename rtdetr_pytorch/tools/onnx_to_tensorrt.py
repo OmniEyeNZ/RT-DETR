@@ -84,5 +84,5 @@ def onnx_to_tensorrt(onnx_file_path = ONNX_SIM_MODEL_PATH, engine_file_path = TE
     # save engine
     save_engine(serialized_engine, engine_file_path)
 #%%
-onnx_to_tensorrt(flop=32)
+onnx_to_tensorrt(flop=16)
 # %%
