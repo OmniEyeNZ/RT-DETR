@@ -114,6 +114,40 @@ This is the official implementation of papers
   <img src="https://github.com/lyuwenyu/RT-DETR/assets/77494834/213cf795-6da6-4261-8549-11947292d3cb" width=500 >
 </div>
 
+## Exporting for DeepStream
+
+To deploy an RT-DETRv2 model with NVIDIA DeepStream, use the DeepStream-specific ONNX export script. This produces an ONNX model with a single output tensor of `[x1, y1, x2, y2, confidence, label]` per detection.
+
+### Step 1: Export .pth to DeepStream-compatible ONNX
+
+From the `rtdetrv2_pytorch/` directory:
+
+```bash
+python tools/export_onnx_deepstream.py \
+    -c configs/rtdetrv2/rtdetrv2_r18vd_120e_cow.yml \
+    -r path/to/trained_checkpoint.pth \
+    -o model_deepstream.onnx \
+    --dynamic
+```
+
+| Argument | Default | Description |
+|---|---|---|
+| `-c, --config` | (required) | Model config YAML file |
+| `-r, --resume` | (required) | Checkpoint `.pth` file |
+| `-o, --output_file` | `model_deepstream.onnx` | Output ONNX file path |
+| `-s, --img-size` | `640` | Input image size |
+| `--dynamic` | off | Enable dynamic batch size |
+| `--batch` | `1` | Static batch size (ignored if `--dynamic`) |
+| `--opset` | `17` | ONNX opset version |
+| `--simplify` | off | Simplify ONNX model with onnxslim |
+| `--check` | off | Validate the exported ONNX model |
+
+### Step 2: Copy to S3
+
+Copy the `.onnx` file to `s3://herd-i-models/bcs/detection/onnx/` and name give it a versioned name following the convention `bcs_detection_model-{version}.onnx`.
+
+> **Note:** This `.onnx` file will be converted to a `.engine` file for inference in the BCS deployment pipeline.
+
 ## Citation
 If you use `RT-DETR` or `RTDETRv2` in your work, please use the following BibTeX entries:
 ```
